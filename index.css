@@ -732,7 +732,7 @@ div.user[data-vip="diamond"]::after {
 	letter-spacing: 0px;
 }
 
-#game-search, #item-search, #yt-search, #search {
+#game-search, #item-search, #vid-search, #yt-search, #search {
 	position: relative;
 	display: block;
 	width: 400px;
@@ -741,7 +741,7 @@ div.user[data-vip="diamond"]::after {
 	border: 1px solid #808080;
 }
 
-#game-search>input, #item-search>input, #yt-search>input, #search>input {
+#game-search>input, #item-search>input, #vid-search>input, #yt-search>input, #search>input {
 	position: absolute;
 	display: block;
 	width: calc(100% - 52px);
@@ -755,7 +755,7 @@ div.user[data-vip="diamond"]::after {
 	letter-spacing: 0px;
 }
 
-#game-search>button, #item-search>button, #yt-search>button, #search>button {
+#game-search>button, #item-search>button, #vid-search>button, #yt-search>button, #search>button {
 	position: absolute;
 	display: block;
 	width: 20px;
@@ -911,6 +911,57 @@ div.user[data-vip="diamond"]::after {
 	color: #808080;
 	font-size: 12px;
 	line-height: 18px;
+}
+
+#vid-list {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin: 40px 0px;
+}
+
+#vid-list>div {
+	position: relative;
+	display: block;
+	width: calc(100% - 32px);
+	height: fit-content;
+	margin: 20px 0px;
+	padding: 15px;
+	border: 1px solid #c0c0c0;
+	border-radius: 10px;
+}
+
+#vid-list>div>video {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin: 0px 0px 15px;
+	object-fit: contain;
+	object-position: 0px 0px;
+}
+
+#vid-list>div>div {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin: 15px 0px 10px;
+	font-weight: 600;
+	line-height: 18px;
+	letter-spacing: 0px;
+}
+
+#vid-list>div>span {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin: 10px 0px 0px;
+	color: #606060;
+	line-height: 16px;
+	letter-spacing: 0px;
 }
 
 #services-page>div>h3 {
@@ -1397,7 +1448,7 @@ div.user[data-vip="diamond"]::after {
 	border: none;
 	cursor: pointer;
 	outline: none;
-	border-radius: 35px;
+	border-radius: 25px;
 	background-image: url("res/menu.svg");
 	background-size: 24px 24px;
 	background-repeat: no-repeat;
@@ -2728,7 +2779,7 @@ div.user[data-vip="diamond"]::after {
 }
 
 @media all and (max-width: 450px) {
-	#search, #game-search, #item-search {
+	#search, #vid-search, #game-search, #item-search {
 		width: calc(100% - 20px);
 		margin: 20px 10px;
 	}

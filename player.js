@@ -38,13 +38,49 @@
 			elem.src = url;
 			elem.async = true;
 			elem.defer = true;
-			elem.onload = resolve;
-			elem.onerror = reject;
-			doc.body.appendChild(elem);
+
+			elem.onload = () => {
+				resolve(null);
+				elem.onload = null;
+				elem.onerror = null;
+			};
+			elem.onerror = (e) => {
+				reject(e);
+				elem.onload = null;
+				elem.onerror = null;
+			};
+
+			body.appendChild(elem);
 		});
 	}
 
 	switch (opt.get("type") || "") {
+		case "ps2":
+			{
+
+				const module = await (await import("/lib/playjs/Play.js")).default();
+				body.innerHTML = "<canvas id=\"outputCanvas\" width=\"1280\" height=\"720\" tabIndex=\"1\"></canvas>";
+				await module.ccall("initVm", "", [], []);
+
+				const file = await (await fetch(url)).blob();
+
+				let done = false;
+
+				module.discImageDevice = {
+					getFileSize: () => file.size,
+					isDone: () => done,
+					read: (ptr, off, len) => {
+						done = false;
+						file.slice(off, off + len, "application/octet-stream").arrayBuffer().then((buf) => {
+							module.HEAPU8.set(new Uint8Array(buf), ptr);
+							done = true;
+						});
+					}
+				};
+				module.bootDiscImage("file.iso");
+			}
+			break;
+		case "swf":
 		case "flash":
 			{
 				await loadJS("/lib/ruffle/ruffle.js");
@@ -61,7 +97,7 @@
 					letterbox: "on",
 					openUrlMode: "confirm",
 					upgradeToHttps: true,
-					warnOnUnsupportedContent: true
+					preferredRenderer: "webgpu"
 				});
 			}
 			break;
@@ -71,15 +107,21 @@
 				const frame = doc.createElement("div");
 				body.innerHTML = "";
 				body.appendChild(frame);
-				win.Dos(frame, {
-					url: url,
-					theme: "light",
-					noCloud: true,
-					noCursor: true,
-					autoStart: true,
-					pathPrefix: "/lib/jsdos/emulators/",
-					workerThread: true,
-					mouseCapture: true
+				await new Promise((resolve) => {
+					win.Dos(frame, {
+						onEvent: (e) => {
+							if (e === "emu-ready")
+								resolve(null);
+						},
+						url: url,
+						theme: "light",
+						noCloud: true,
+						noCursor: true,
+						autoStart: true,
+						pathPrefix: "/lib/jsdos/emulators/",
+						workerThread: true,
+						mouseCapture: true
+					});
 				});
 			}
 			break;
@@ -88,35 +130,65 @@
 				await loadJS("/lib/emulatorjs/emulator.min.js");
 				body.innerHTML = "";
 				body.appendChild(doc.createElement("div"));
-				new win.EmulatorJS("body>div", {
-					system: opt.get("core") || "",
-					gameUrl: url,
-					biosUrl: bios,
-					dataPath: "/lib/emulatorjs/",
-					gameName: name,
-					startOnLoad: true
+				await new Promise((resolve) => {
+					const obj = new win.EmulatorJS("body>div", {
+						system: opt.get("core") || "",
+						gameUrl: url,
+						biosUrl: bios,
+						threads: true,
+						dataPath: "/lib/emulatorjs/",
+						gameName: name,
+						startOnLoad: true
+					});
+
+					Object.defineProperty(obj, "started", {
+						set: (v) => {
+							if (v === true) {
+								resolve(null);
+
+								Object.defineProperty(obj, "started", {
+									value: true,
+									writable: true,
+									enumerable: true,
+									configurable: true
+								});
+							}
+						},
+						get: () => false,
+						enumerable: false,
+						configurable: true
+					});
 				});
 			}
 			break;
 		default:
-			{
+			body.innerHTML = "";
+
+			await new Promise((resolve, reject) => {
 				const frame = doc.createElement("embed");
+				frame.src = url;
 				frame.type = "text/plain";
 				frame.width = "1024";
 				frame.height = "768";
-				frame.src = url;
-				body.innerHTML = "";
+
+				frame.onload = () => {
+					resolve(null);
+					frame.onload = null;
+					frame.onerror = null;
+				};
+				frame.onerror = (e) => {
+					reject(e);
+					frame.onload = null;
+					frame.onerror = null;
+				};
+
 				body.appendChild(frame);
-			}
+			});
 			break;
 	}
 
-	setTimeout(() => {
-		win.focus();
-
-		if (url.startsWith("blob:"))
-			URL.revokeObjectURL(url);
-		if (bios.startsWith("blob:"))
-			URL.revokeObjectURL(bios);
-	}, 5000);
+	if (url.startsWith("blob:"))
+		URL.revokeObjectURL(url);
+	if (bios.startsWith("blob:"))
+		URL.revokeObjectURL(bios);
 })(window);
